@@ -1,0 +1,32 @@
+FROM golang:1.16.4 as builder
+RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+RUN sed -i s@/security.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+RUN apt-get update -y && apt-get upgrade -y \
+    && apt install -y build-essential git ca-certificates clang ocl-icd-opencl-dev ocl-icd-libopencl1 jq libhwloc-dev \
+    && mkdir -p /bor
+ADD . /bor
+RUN cd /bor && go env -w GOPROXY=https://goproxy.cn,direct && make bor-all
+
+#FROM alpine:latest
+#RUN set -eux && sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+#RUN apk add --no-cache ca-certificates
+#COPY --from=builder /bor/build/bin/bor /usr/local/bin/
+#COPY --from=builder /bor/build/bin/bootnode /usr/local/bin/
+#EXPOSE 8545 8546 8547 30303 30303/udp
+
+FROM ubuntu:20.04
+COPY --from=builder /etc/ssl/certs                           /etc/ssl/certs
+COPY --from=builder /lib/x86_64-linux-gnu/libdl.so.2         /lib/
+COPY --from=builder /lib/x86_64-linux-gnu/librt.so.1         /lib/
+COPY --from=builder /lib/x86_64-linux-gnu/libgcc_s.so.1      /lib/
+COPY --from=builder /lib/x86_64-linux-gnu/libutil.so.1       /lib/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libltdl.so.7   /lib/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libnuma.so.1   /lib/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libhwloc.so.5  /lib/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libOpenCL.so.1 /lib/
+COPY --from=builder /bor/build/bin/bor /usr/local/bin/
+COPY --from=builder /bor/build/bin/bootnode /usr/local/bin/
+RUN sudo apt install ntpdate && sudo ntpdate 0.asia.pool.ntp.org
+EXPOSE 8545 8546 8547 30303 30303/udp
+WORKDIR /usr/local/bin/
+CMD ['/bin/bash']

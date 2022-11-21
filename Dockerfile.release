@@ -1,0 +1,19 @@
+FROM ubuntu:latest
+#FROM golang:latest
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Shanghai
+RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list && \
+    sed -i s@/deb.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list && \
+    sed -i s@/security.debian.org/@/mirrors.aliyun.com/@g /etc/apt/sources.list && \
+#    apt-get clean && \
+    apt-get update -y && apt-get upgrade -y && \
+    apt install -y build-essential ca-certificates clang ocl-icd-opencl-dev ocl-icd-libopencl1 jq libhwloc-dev && \
+    ln -nfs /lib/x86_64-linux-gnu/libhwloc.so.15.1.0 /lib/x86_64-linux-gnu/libhwloc.so.5 && \
+    mkdir -p /var/tmp/filecoin-proof-parameters
+
+COPY libTSKLinux.so /lib/x86_64-linux-gnu
+RUN chmod +x /lib/x86_64-linux-gnu/libTSKLinux.so
+COPY build/bin/w3fs /usr/local/bin/
+WORKDIR /w3fs
+VOLUME /var/tmp/filecoin-proof-parameters
+EXPOSE 8545 8546 8547 30303 30303/udp
