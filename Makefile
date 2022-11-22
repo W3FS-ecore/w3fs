@@ -59,10 +59,11 @@ w3fs:
 ifeq ($(findstring Ubuntu,$(KERNEL_SESSION)),Ubuntu)
 	sudo cp -f libTSKLinux.so /lib/x86_64-linux-gnu
 	sudo chmod +x /lib/x86_64-linux-gnu/libTSKLinux.so
-	sudo chmod +x  -R ./extern/storage-lib/*
+	sudo chmod +x -R ./extern/storage-lib/*
 else
 	sudo cp -f libTSKLinux.so /lib64/
 	sudo chmod +x /lib64/libTSKLinux.so
+	sudo chmod +x -R ./extern/storage-lib/*
 endif
 
 	$(GORUN) build/ci.go install ./cmd/geth
@@ -74,9 +75,11 @@ w3fs-all:
 ifeq ($(findstring Ubuntu,$(KERNEL_SESSION)),Ubuntu)
 	sudo cp -f libTSKLinux.so /lib/x86_64-linux-gnu
 	sudo chmod +x /lib/x86_64-linux-gnu/libTSKLinux.so
+	sudo chmod +x -R ./extern/storage-lib/*
 else
 	sudo cp -f libTSKLinux.so /lib64/
 	sudo chmod +x /lib64/libTSKLinux.so
+	sudo chmod +x  -R ./extern/storage-lib/*
 endif
 	$(GORUN) build/ci.go install
 	mkdir -p $(GOPATH)/bin/
